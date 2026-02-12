@@ -83,7 +83,16 @@ export class LifecycleManager {
         const enabled = this.options.flushOnBeforeUnload ?? true;
         if (enabled) {
             this.boundHandlers.beforeUnload = () => {
-                this.flushCallback();
+                // For beforeunload, we need synchronous completion
+                // The flush callback should use BeaconTransport which completes synchronously
+                const result = this.flushCallback();
+                
+                // If it returns a promise, we can't await it in beforeunload
+                // but BeaconTransport completes synchronously anyway
+                if (result instanceof Promise) {
+                    // Best effort - BeaconTransport will complete before page unloads
+                    result.catch(err => console.error('[CITC] Flush error:', err));
+                }
             };
             window.addEventListener('beforeunload', this.boundHandlers.beforeUnload);
         }
