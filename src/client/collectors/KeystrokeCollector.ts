@@ -6,18 +6,19 @@ import { BaseCollector } from './BaseCollector.js';
 export class KeystrokeCollector extends BaseCollector {
     start(): void {
         this.on(this.target, 'keydown', (event) => {
+            const keyEvent = event as KeyboardEvent;
             this.emit({
                 type: 'keystroke',
                 fieldId: this.fieldId,
                 target: this.target,
                 timestamp: Date.now(),
                 data: {
-                    key: event.key,
-                    code: event.code,
-                    ctrlKey: event.ctrlKey,
-                    shiftKey: event.shiftKey,
-                    altKey: event.altKey,
-                    metaKey: event.metaKey,
+                    key: keyEvent.key,
+                    code: keyEvent.code,
+                    ctrlKey: keyEvent.ctrlKey,
+                    shiftKey: keyEvent.shiftKey,
+                    altKey: keyEvent.altKey,
+                    metaKey: keyEvent.metaKey,
                 },
             });
         });
