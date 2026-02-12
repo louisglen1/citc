@@ -41,19 +41,37 @@ export class FieldDiscovery {
     }
 
     private discoverByAttribute(config: { mode: 'attribute'; attribute: string; capture?: CaptureConfig }): DiscoveredField[] {
-        const elements = document.querySelectorAll<HTMLElement>(`[${config.attribute}]`);
         const fields: DiscoveredField[] = [];
-
-        elements.forEach((element) => {
-            const id = element.getAttribute(config.attribute);
-            if (id) {
-                fields.push({
-                    id,
-                    element,
-                    capture: this.mergeCapture(config.capture),
-                });
-            }
-        });
+        
+        // Validate attribute name (must be valid CSS identifier)
+        const attr = config.attribute;
+        if (!attr || typeof attr !== 'string' || !/^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(attr)) {
+            console.error(
+                `[CITC] Invalid attribute name: "${attr}". ` +
+                `Attribute must start with a letter or underscore, ` +
+                `followed by letters, digits, hyphens, or underscores.`
+            );
+            return fields;
+        }
+        
+        try {
+            const elements = document.querySelectorAll<HTMLElement>(`[${attr}]`);
+            elements.forEach((element) => {
+                const id = element.getAttribute(attr);
+                if (id) {
+                    fields.push({
+                        id,
+                        element,
+                        capture: this.mergeCapture(config.capture),
+                    });
+                }
+            });
+        } catch (error) {
+            console.error(
+                `[CITC] Invalid selector for attribute "${attr}":`,
+                error
+            );
+        }
 
         return fields;
     }
@@ -62,13 +80,20 @@ export class FieldDiscovery {
         const discovered: DiscoveredField[] = [];
 
         for (const field of fields) {
-            const element = document.querySelector<HTMLElement>(field.selector);
-            if (element) {
-                discovered.push({
-                    id: field.id,
-                    element,
-                    capture: this.mergeCapture(field.capture),
-                });
+            try {
+                const element = document.querySelector<HTMLElement>(field.selector);
+                if (element) {
+                    discovered.push({
+                        id: field.id,
+                        element,
+                        capture: this.mergeCapture(field.capture),
+                    });
+                }
+            } catch (error) {
+                console.error(
+                    `[CITC] Invalid selector "${field.selector}" for field "${field.id}":`,
+                    error
+                );
             }
         }
 
