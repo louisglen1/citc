@@ -33,7 +33,7 @@ export class TelemetryEngine {
         this.discovery = new FieldDiscovery(options.defaults?.capture);
         this.processor = new EventProcessor(options.context);
         this.privacy = new Privacy(options.privacy);
-        this.queue = new Queue(this.transport);
+        this.queue = new Queue(this.transport, options.queue);
 
         // Initialize lifecycle manager
         this.lifecycle = new LifecycleManager(
@@ -49,6 +49,20 @@ export class TelemetryEngine {
 
     /**
      * Starts telemetry collection.
+     * 
+     * Discovers fields based on configuration, attaches collectors to each field,
+     * and sets up lifecycle hooks for automatic flushing.
+     * 
+     * @remarks
+     * - Idempotent: calling start() multiple times has no effect
+     * - Fields are discovered at start time (for dynamic fields, call stop() then start())
+     * - Event listeners are attached synchronously
+     * 
+     * @example
+     * ```typescript
+     * const citc = CITC({ endpoint: '/api/telemetry' });
+     * citc.start();  // Begin collecting events
+     * ```
      */
     start(): void {
         if (this.running) {
@@ -63,6 +77,26 @@ export class TelemetryEngine {
 
     /**
      * Stops telemetry collection and flushes pending events.
+     * 
+     * Tears down lifecycle hooks, detaches all collectors, removes event listeners,
+     * and sends any queued events before completing.
+     * 
+     * @returns Promise that resolves when all pending events are flushed
+     * 
+     * @remarks
+     * - Safe to call multiple times (idempotent)
+     * - Always await stop() to ensure events are sent before page navigation
+     * - In SPAs, call stop() before unmounting the component that initialized CITC
+     * 
+     * @example
+     * ```typescript
+     * // React example
+     * useEffect(() => {
+     *   const citc = CITC(config);
+     *   citc.start();
+     *   return () => { citc.stop(); }; // Cleanup on unmount
+     * }, []);
+     * ```
      */
     async stop(): Promise<void> {
         if (!this.running) {
@@ -76,7 +110,26 @@ export class TelemetryEngine {
     }
 
     /**
-     * Flushes pending events without stopping.
+     * Flushes pending events without stopping collection.
+     * 
+     * Manually triggers a flush of all queued events. Useful for ensuring
+     * events are sent before critical navigation or state changes.
+     * 
+     * @returns Promise that resolves when flush completes
+     * 
+     * @remarks
+     * - Does not stop collection - events continue to be captured
+     * - Automatically called by lifecycle hooks (visibility change, unload, etc.)
+     * - Safe to call concurrently - flushes are serialized
+     * 
+     * @example
+     * ```typescript
+     * // Flush before navigation
+     * async function navigate(url: string) {
+     *   await citc.flush();
+     *   window.location.href = url;
+     * }
+     * ```
      */
     async flush(): Promise<void> {
         await this.queue.flush();
@@ -84,6 +137,28 @@ export class TelemetryEngine {
 
     /**
      * Updates the telemetry context.
+     * 
+     * Context is metadata included with every event (e.g., userId, sessionId).
+     * Use this to update context dynamically after authentication or state changes.
+     * 
+     * @param ctx - Partial context to merge with existing context
+     * 
+     * @remarks
+     * - Context is merged, not replaced (pass undefined to clear a field)
+     * - Changes affect all events captured after this call
+     * - Context persists until stop() is called
+     * 
+     * @example
+     * ```typescript
+     * // Update context after user login
+     * citc.setContext({
+     *   userId: user.id,
+     *   sessionId: generateSessionId()
+     * });
+     * 
+     * // Clear userId on logout
+     * citc.setContext({ userId: undefined });
+     * ```
      */
     setContext(ctx: Partial<Context>): void {
         this.processor.setContext(ctx);
