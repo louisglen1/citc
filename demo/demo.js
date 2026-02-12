@@ -41,23 +41,23 @@ const telemetry = CITC({
 telemetry.start();
 
 console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #9c27b0');
-console.log('%c🚀 CITC Demo Started', 'color: #ff9800; font-size: 16px; font-weight: bold');
+console.log('%c CITC Demo Started', 'color: #ff9800; font-size: 16px; font-weight: bold');
 console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #9c27b0');
-console.log('%c📋 Try these actions:', 'color: #2196f3; font-weight: bold');
-console.log('  ✓ Type in the input fields');
-console.log('  ✓ Focus/blur the inputs');
-console.log('  ✓ Select text');
-console.log('  ✓ Move cursor position');
-console.log('  ✓ Copy/paste text');
-console.log('%c⚙️  Queue Config:', 'color: #2196f3; font-weight: bold');
-console.log('  • Batch size: 5 events');
-console.log('  • Flush interval: 3 seconds');
-console.log('  • Max queue: 1000 events');
-console.log('%c🔒 Privacy: Text redaction enabled', 'color: #4caf50; font-weight: bold');
+console.log('%c Try these actions:', 'color: #2196f3; font-weight: bold');
+console.log('  - Type in the input fields');
+console.log('  - Focus/blur the inputs');
+console.log('  - Select text');
+console.log('  - Move cursor position');
+console.log('  - Copy/paste text');
+console.log('%c  Queue Config:', 'color: #2196f3; font-weight: bold');
+console.log('  - Batch size: 5 events');
+console.log('  - Flush interval: 3 seconds');
+console.log('  - Max queue: 1000 events');
+console.log('%c Privacy: Text redaction enabled', 'color: #4caf50; font-weight: bold');
 console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #9c27b0');
 console.log('');
 
 // Monitor events
 window.addEventListener('beforeunload', () => {
-    console.log(`%c📊 Session Summary: ${eventCount} events captured`, 'color: #ff5722; font-weight: bold');
+    console.log(`%c Session Summary: ${eventCount} events captured`, 'color: #ff5722; font-weight: bold');
 });
