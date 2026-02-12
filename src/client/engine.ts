@@ -10,6 +10,18 @@ import { Transport, HttpTransport, BeaconTransport, ConsoleTransport } from './t
 import { LifecycleManager } from './lifecycle.js';
 
 /**
+ * Finalization registry to detect memory leaks from unclosed engines.
+ */
+const engineCleanupRegistry = new FinalizationRegistry((engineId: number) => {
+    console.warn(
+        `[CITC] TelemetryEngine #${engineId} was garbage collected without calling stop(). ` +
+        `This may cause memory leaks. Always call await engine.stop() before discarding instances.`
+    );
+});
+
+let engineIdCounter = 0;
+
+/**
  * Main telemetry engine orchestrating discovery, collection, and transport.
  */
 export class TelemetryEngine {
@@ -22,9 +34,16 @@ export class TelemetryEngine {
     private transport: Transport;
     private lifecycle: LifecycleManager;
     private running: boolean = false;
+    private engineId: number;
+    private cleanupToken: object;
 
     constructor(options: CITCOptions = {}) {
         this.options = options;
+        this.engineId = ++engineIdCounter;
+        this.cleanupToken = {};
+        
+        // Register for cleanup detection
+        engineCleanupRegistry.register(this, this.engineId, this.cleanupToken);
 
         // Initialize transport
         this.transport = this.createTransport();
@@ -118,6 +137,9 @@ export class TelemetryEngine {
         this.targets.detach();
         await this.queue.flush();
         this.running = false;
+        
+        // Unregister from cleanup detection - proper cleanup was done
+        engineCleanupRegistry.unregister(this.cleanupToken);
     }
 
     /**
