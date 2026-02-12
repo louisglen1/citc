@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CITC Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        input {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>CITC Demo</h1>
+    <p>Open the console to see telemetry events</p>
+
+    <input type="text" data-citc="username" placeholder="Username" />
+    <input type="text" data-citc="email" placeholder="Email" />
+
+    <script type="module">
+        // Inline error handling
+        window.addEventListener('error', (e) => {
+            console.error('Script error:', e.message);
+        });
+        
+        import('./demo.js')
+            .then(() => console.log('Demo module loaded successfully'))
+            .catch(err => {
+                console.error('Failed to load demo.js:', err);
+                document.body.innerHTML += '<div style="color:red;padding:20px;border:2px solid red;margin-top:20px;"><strong>Error loading demo script!</strong><br>Check console for details. Make sure you built the project with: npm run build</div>';
+            });
+    </script>
+</body>
+</html>
