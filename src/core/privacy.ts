@@ -16,9 +16,11 @@ export class Privacy {
 
     /**
      * Filters a telemetry event according to privacy rules.
+     * Uses deep cloning to prevent reference leaks in nested objects.
      */
     filter(event: TelemetryEvent): TelemetryEvent {
-        const filtered = { ...event, data: { ...event.data } };
+        // Deep clone to prevent nested object reference leaks
+        const filtered = structuredClone(event);
 
         // Redact keystroke text
         if (this.options.redactText && event.type === 'keystroke') {
