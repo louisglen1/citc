@@ -2,23 +2,48 @@ import { TelemetryEvent } from '../schemas/events.js';
 import { Transport } from '../client/transport.js';
 
 /**
- * In-memory queue with batching support.
+ * Queue configuration options.
+ */
+export interface QueueOptions {
+    batchSize?: number;
+    flushInterval?: number;
+    maxQueueSize?: number;
+}
+
+/**
+ * In-memory queue with batching support and size limits.
  */
 export class Queue {
     private buffer: TelemetryEvent[] = [];
     private transport: Transport;
     private flushTimer?: number;
-    private batchSize: number = 10;
-    private flushInterval: number = 5000;
+    private batchSize: number;
+    private flushInterval: number;
+    private maxQueueSize: number;
+    private droppedEvents: number = 0;
 
-    constructor(transport: Transport) {
+    constructor(transport: Transport, options: QueueOptions = {}) {
         this.transport = transport;
+        this.batchSize = options.batchSize ?? 10;
+        this.flushInterval = options.flushInterval ?? 5000;
+        this.maxQueueSize = options.maxQueueSize ?? 1000;
     }
 
     /**
      * Enqueues an event and schedules flush.
+     * If queue is at max capacity, drops oldest events (FIFO eviction).
      */
     enqueue(event: TelemetryEvent): void {
+        // Enforce queue size limit with drop-oldest policy
+        if (this.buffer.length >= this.maxQueueSize) {
+            this.buffer.shift(); // Drop oldest event
+            this.droppedEvents++;
+            
+            if (this.droppedEvents % 100 === 0) {
+                console.warn(`[CITC] Queue overflow: ${this.droppedEvents} events dropped`);
+            }
+        }
+
         this.buffer.push(event);
 
         if (this.buffer.length >= this.batchSize) {
@@ -26,6 +51,13 @@ export class Queue {
         } else {
             this.scheduleFlush();
         }
+    }
+
+    /**
+     * Returns the number of events dropped due to queue overflow.
+     */
+    getDroppedCount(): number {
+        return this.droppedEvents;
     }
 
     /**
