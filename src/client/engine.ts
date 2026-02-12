@@ -70,6 +70,17 @@ export class TelemetryEngine {
         }
 
         const fields = this.discovery.discover(this.options.fields);
+
+        if (fields.length === 0) {
+            console.warn('[CITC] No fields discovered. Collection will not start.\n' +
+                'Check your field selection configuration:\n' +
+                '  - Ensure elements exist in DOM before calling start()\n' +
+                '  - Verify selector/attribute matches your HTML\n' +
+                '  - Current config:', 
+                this.options.fields || { mode: 'default' }
+            );
+        }
+
         this.targets.attach(fields);
         this.lifecycle.setup();
         this.running = true;
