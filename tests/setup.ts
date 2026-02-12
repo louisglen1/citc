@@ -38,6 +38,32 @@ beforeEach(() => {
   if (!window.performance.now) {
     window.performance.now = vi.fn(() => Date.now());
   }
+  
+  // Mock DataTransfer and ClipboardEvent for jsdom
+  if (typeof DataTransfer === 'undefined') {
+    (globalThis as any).DataTransfer = class DataTransfer {
+      private data: Map<string, string> = new Map();
+      
+      getData(format: string): string {
+        return this.data.get(format) || '';
+      }
+      
+      setData(format: string, data: string): void {
+        this.data.set(format, data);
+      }
+    };
+  }
+  
+  if (typeof ClipboardEvent === 'undefined') {
+    (globalThis as any).ClipboardEvent = class ClipboardEvent extends Event {
+      clipboardData: DataTransfer | null;
+      
+      constructor(type: string, options?: { clipboardData?: DataTransfer }) {
+        super(type);
+        this.clipboardData = options?.clipboardData || null;
+      }
+    };
+  }
 });
 
 /**
