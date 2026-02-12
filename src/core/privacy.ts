@@ -21,18 +21,23 @@ export class Privacy {
         const filtered = { ...event, data: { ...event.data } };
 
         // Redact keystroke text
-        if (this.options.redactText && event.type === 'keystroke' && filtered.data.key) {
-            filtered.data.key = '[REDACTED]';
+        if (this.options.redactText && event.type === 'keystroke') {
+            if (filtered.data.key) {
+                filtered.data.key = null;
+            }
+            if (filtered.data.code) {
+                filtered.data.code = null;
+            }
         }
 
         // Redact clipboard content
         if (this.options.redactClipboard && event.type === 'clipboard' && filtered.data.content) {
-            filtered.data.content = '[REDACTED]';
+            filtered.data.content = null;
         }
 
         // Redact selection text
         if (this.options.redactText && event.type === 'selection' && filtered.data.text) {
-            filtered.data.text = '[REDACTED]';
+            filtered.data.text = null;
         }
 
         return filtered;
