@@ -6,7 +6,8 @@ import { BaseCollector } from './BaseCollector.js';
 export class ClipboardCollector extends BaseCollector {
     start(): void {
         this.on(this.target, 'paste', (event) => {
-            const clipboardData = event.clipboardData;
+            const clipboardEvent = event as ClipboardEvent;
+            const clipboardData = clipboardEvent.clipboardData;
             const content = clipboardData?.getData('text') ?? '';
 
             this.emit({
