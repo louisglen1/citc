@@ -22,17 +22,41 @@ describe('Privacy', () => {
       expect(filtered.data.code).toBe('KeyA');
     });
     
-    it('should redact text fields when enabled', () => {
+    it('should redact text fields while preserving ALL other fields', () => {
       const event = createTestEvent({
         type: 'keystroke',
-        data: { key: 'a', code: 'KeyA' },
+        data: { 
+          key: 'a', 
+          code: 'KeyA',
+          ctrlKey: true,
+          shiftKey: false,
+          altKey: false,
+          metaKey: false,
+          timestamp: 1234567890
+        },
       });
       
       const privacy = new Privacy({ redactText: true });
       const filtered = privacy.filter(event);
       
+      // Verify redacted fields
       expect(filtered.data.key).toBeNull();
       expect(filtered.data.code).toBeNull();
+      
+      // Verify ALL preserved fields are unchanged
+      expect(filtered.data.ctrlKey).toBe(true);
+      expect(filtered.data.shiftKey).toBe(false);
+      expect(filtered.data.altKey).toBe(false);
+      expect(filtered.data.metaKey).toBe(false);
+      expect(filtered.data.timestamp).toBe(1234567890);
+      
+      // Verify no new fields were added
+      const expectedKeys = ['key', 'code', 'ctrlKey', 'shiftKey', 'altKey', 'metaKey', 'timestamp'];
+      expect(Object.keys(filtered.data).sort()).toEqual(expectedKeys.sort());
+      
+      // Verify deep clone (not reference)
+      expect(filtered).not.toBe(event);
+      expect(filtered.data).not.toBe(event.data);
     });
     
     it('should not redact non-text fields', () => {
@@ -48,17 +72,31 @@ describe('Privacy', () => {
       expect(filtered.data.focused).toBe(true);
     });
     
-    it('should redact clipboard content', () => {
+    it('should redact clipboard content while preserving action field', () => {
       const event = createTestEvent({
         type: 'clipboard',
-        data: { content: 'copied text', action: 'copy' },
+        data: { 
+          content: 'copied text', 
+          action: 'copy',
+          timestamp: 1234567890,
+          targetField: 'email'
+        },
       });
       
       const privacy = new Privacy({ redactClipboard: true });
       const filtered = privacy.filter(event);
       
+      // Verify redacted field
       expect(filtered.data.content).toBeNull();
+      
+      // Verify ALL preserved fields
       expect(filtered.data.action).toBe('copy');
+      expect(filtered.data.timestamp).toBe(1234567890);
+      expect(filtered.data.targetField).toBe('email');
+      
+      // Verify no new fields added
+      const expectedKeys = ['content', 'action', 'timestamp', 'targetField'];
+      expect(Object.keys(filtered.data).sort()).toEqual(expectedKeys.sort());
     });
     
     it('should not mutate original event (deep clone)', () => {
@@ -100,22 +138,33 @@ describe('Privacy', () => {
       expect(filtered.data.metadata).toEqual(event.data.metadata);
     });
     
-    it('should redact selection text', () => {
+    it('should redact selection text while preserving position data', () => {
       const event = createTestEvent({
         type: 'selection',
         data: {
           text: 'selected text',
           start: 0,
           end: 13,
+          direction: 'forward',
+          fieldId: 'email'
         },
       });
       
       const privacy = new Privacy({ redactText: true });
       const filtered = privacy.filter(event);
       
+      // Verify redacted field
       expect(filtered.data.text).toBeNull();
+      
+      // Verify ALL preserved fields
       expect(filtered.data.start).toBe(0);
       expect(filtered.data.end).toBe(13);
+      expect(filtered.data.direction).toBe('forward');
+      expect(filtered.data.fieldId).toBe('email');
+      
+      // Verify no new fields added
+      const expectedKeys = ['text', 'start', 'end', 'direction', 'fieldId'];
+      expect(Object.keys(filtered.data).sort()).toEqual(expectedKeys.sort());
     });
     
     it('should handle events without text fields', () => {
