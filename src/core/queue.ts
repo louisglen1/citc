@@ -95,6 +95,33 @@ export class Queue {
         
         try {
             await this.transport.send(events);
+        } catch (error) {
+            // Transport failed - restore events to front of buffer
+            // to retry on next flush (respecting maxQueueSize)
+            console.error('[CITC] Transport failed, restoring events to queue:', error);
+            
+            // Restore events to front of buffer, but respect maxQueueSize
+            const availableSpace = this.maxQueueSize - this.buffer.length;
+            if (availableSpace > 0) {
+                const eventsToRestore = events.slice(0, availableSpace);
+                this.buffer.unshift(...eventsToRestore);
+                
+                const dropped = events.length - eventsToRestore.length;
+                if (dropped > 0) {
+                    this.droppedEvents += dropped;
+                    console.warn(
+                        `[CITC] Queue overflow after transport failure: ` +
+                        `${dropped} events dropped, ${eventsToRestore.length} restored`
+                    );
+                }
+            } else {
+                // No space - drop all events
+                this.droppedEvents += events.length;
+                console.warn(
+                    `[CITC] Queue full after transport failure: ` +
+                    `${events.length} events dropped`
+                );
+            }
         } finally {
             // Always release lock, even if transport fails
             this.flushing = false;
