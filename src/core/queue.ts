@@ -17,9 +17,27 @@ export class Queue {
 
     constructor(transport: Transport, options: QueueOptions = {}) {
         this.transport = transport;
-        this.batchSize = options.batchSize ?? 10;
-        this.flushInterval = options.flushInterval ?? 5000;
-        this.maxQueueSize = options.maxQueueSize ?? 1000;
+        
+        // Validate and set batchSize (must be positive integer)
+        const batchSize = options.batchSize ?? 10;
+        if (batchSize < 1 || !Number.isFinite(batchSize)) {
+            throw new Error(`[CITC] queue.batchSize must be >= 1 and finite, got: ${batchSize}`);
+        }
+        this.batchSize = Math.floor(batchSize);
+        
+        // Validate and set flushInterval (0 is allowed to disable, but not negative)
+        const flushInterval = options.flushInterval ?? 5000;
+        if (flushInterval < 0 || !Number.isFinite(flushInterval)) {
+            throw new Error(`[CITC] queue.flushInterval must be >= 0 and finite, got: ${flushInterval}`);
+        }
+        this.flushInterval = Math.floor(flushInterval);
+        
+        // Validate and set maxQueueSize (must be positive integer)
+        const maxQueueSize = options.maxQueueSize ?? 1000;
+        if (maxQueueSize < 1 || !Number.isFinite(maxQueueSize)) {
+            throw new Error(`[CITC] queue.maxQueueSize must be >= 1 and finite, got: ${maxQueueSize}`);
+        }
+        this.maxQueueSize = Math.floor(maxQueueSize);
     }
 
     /**
