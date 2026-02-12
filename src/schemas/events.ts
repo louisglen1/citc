@@ -19,5 +19,5 @@ export interface TelemetryEvent {
     fieldId: string;
     timestamp: number;
     context: Record<string, unknown>;
-    data: Record<string, unknown>;
+    data: Record<string, unknown | null>;
 }
