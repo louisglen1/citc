@@ -16,8 +16,21 @@ export class EventProcessor {
 
     /**
      * Updates the current context.
+     * Validates that the context is JSON-serializable to prevent crashes during transport.
      */
     setContext(ctx: Partial<Context>): void {
+        // Validate context is serializable
+        try {
+            JSON.stringify(ctx);
+        } catch (error) {
+            console.error(
+                '[CITC] Invalid context: must be JSON-serializable. ' +
+                'Circular references and non-serializable values are not allowed.',
+                error
+            );
+            return; // Don't update context with invalid data
+        }
+        
         this.context = { ...this.context, ...ctx };
     }
 
