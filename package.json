@@ -23,7 +23,11 @@
         "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
         "prepublishOnly": "npm run clean && npm run build",
         "dev": "tsc && npx serve .",
-        "demo": "tsc && npx serve . -p 3000"
+        "demo": "tsc && npx serve . -p 3000",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:ui": "vitest --ui",
+        "test:coverage": "vitest run --coverage"
     },
     "keywords": [
         "telemetry",
@@ -55,6 +59,9 @@
     },
     "sideEffects": false,
     "devDependencies": {
-        "typescript": "^5.9.3"
+        "@vitest/coverage-v8": "^4.0.18",
+        "jsdom": "^28.0.0",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.18"
     }
 }
