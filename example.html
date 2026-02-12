@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CITC Example</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        input {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #0066cc;
+        }
+        h1 {
+            color: #333;
+        }
+        p {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>CITC Telemetry Example</h1>
+    <p>Open the browser console to see telemetry events collected from these inputs.</p>
+
+    <input type="text" data-citc="username" placeholder="Username" />
+    <input type="email" data-citc="email" placeholder="Email" />
+
+    <script type="module">
+        // In a real project, import from the built/bundled version
+        // import { CITC } from './dist/index.js';
+
+        // For this demo, we'll simulate the import
+        // You would build the TypeScript first: tsc
+        
+        // Simulated usage:
+        console.log('[CITC Example] Initializing telemetry...');
+        console.log('[CITC Example] In production, import CITC from your built files');
+        
+        // Example initialization code:
+        /*
+        const telemetry = CITC({
+            fields: {
+                mode: 'attribute',
+                attribute: 'data-citc',
+                capture: {
+                    focus: true,
+                    keystroke: true,
+                    caret: false,
+                    selection: false,
+                    clipboard: false,
+                },
+            },
+            privacy: {
+                redactText: true,
+                redactClipboard: true,
+            },
+        });
+
+        telemetry.start();
+        console.log('[CITC] Telemetry started - events will appear in console');
+        */
+
+        console.log('[CITC Example] Build the TypeScript files first with: tsc');
+        console.log('[CITC Example] Then replace the simulated code above with real imports');
+    </script>
+</body>
+</html>
