@@ -1,24 +1,29 @@
 {
-    "name": "citc",
+    "name": "@learnlytics/citc",
     "version": "0.1.0",
-    "description": "Client Input Telemetry Collection - A privacy-first browser telemetry SDK",
+    "description": "Client Input Telemetry Collection - A privacy-first browser telemetry SDK for collecting user interaction events with zero dependencies",
     "type": "module",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
-            "import": "./dist/index.js"
+            "import": "./dist/index.js",
+            "default": "./dist/index.js"
         }
     },
     "files": [
         "dist",
-        "README.md"
+        "README.md",
+        "LICENSE"
     ],
     "scripts": {
         "build": "tsc",
         "watch": "tsc --watch",
-        "clean": "rm -rf dist"
+        "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
+        "prepublishOnly": "npm run clean && npm run build",
+        "dev": "tsc && npx serve .",
+        "demo": "tsc && npx serve . -p 3000"
     },
     "keywords": [
         "telemetry",
@@ -26,10 +31,29 @@
         "browser",
         "input",
         "tracking",
-        "privacy"
+        "privacy",
+        "privacy-first",
+        "gdpr",
+        "user-behavior",
+        "event-collection",
+        "interaction-tracking",
+        "zero-dependencies",
+        "typescript"
     ],
-    "author": "",
+    "author": "Louis Glen",
     "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/louisglen/citc.git"
+    },
+    "bugs": {
+        "url": "https://github.com/louisglen/citc/issues"
+    },
+    "homepage": "https://github.com/louisglen/citc#readme",
+    "engines": {
+        "node": ">=16.0.0"
+    },
+    "sideEffects": false,
     "devDependencies": {
         "typescript": "^5.9.3"
     }
