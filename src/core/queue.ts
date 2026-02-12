@@ -1,14 +1,6 @@
 import { TelemetryEvent } from '../schemas/events.js';
 import { Transport } from '../client/transport.js';
-
-/**
- * Queue configuration options.
- */
-export interface QueueOptions {
-    batchSize?: number;
-    flushInterval?: number;
-    maxQueueSize?: number;
-}
+import { QueueOptions } from '../schemas/config.js';
 
 /**
  * In-memory queue with batching support and size limits.
