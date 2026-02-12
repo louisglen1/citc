@@ -8,6 +8,7 @@ export type {
     PrivacyOptions,
     DOMOptions,
     DefaultsOptions,
+    QueueOptions,
     LifecycleOptions,
     CITCOptions,
 } from './config.js';
