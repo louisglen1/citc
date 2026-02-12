@@ -15,6 +15,7 @@ export class Queue {
     private flushInterval: number;
     private maxQueueSize: number;
     private droppedEvents: number = 0;
+    private flushing: boolean = false;
 
     constructor(transport: Transport, options: QueueOptions = {}) {
         this.transport = transport;
@@ -56,8 +57,14 @@ export class Queue {
 
     /**
      * Flushes all buffered events.
+     * Uses a mutex to prevent concurrent flush operations.
      */
     async flush(): Promise<void> {
+        // Prevent concurrent flushes
+        if (this.flushing) {
+            return;
+        }
+
         if (this.flushTimer !== undefined) {
             clearTimeout(this.flushTimer);
             this.flushTimer = undefined;
@@ -67,8 +74,15 @@ export class Queue {
             return;
         }
 
+        this.flushing = true;
         const events = this.buffer.splice(0);
-        await this.transport.send(events);
+        
+        try {
+            await this.transport.send(events);
+        } finally {
+            // Always release lock, even if transport fails
+            this.flushing = false;
+        }
     }
 
     private scheduleFlush(): void {
