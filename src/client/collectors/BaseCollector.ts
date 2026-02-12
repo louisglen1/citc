@@ -43,17 +43,17 @@ export abstract class BaseCollector {
     /**
      * Helper to attach event listeners with automatic cleanup tracking.
      */
-    protected on<K extends keyof HTMLElementEventMap>(
-        element: HTMLElement | Document | Window,
+    protected on<T extends EventTarget, K extends string>(
+        element: T,
         event: K,
-        handler: (event: HTMLElementEventMap[K]) => void,
+        handler: (event: Event) => void,
         options?: AddEventListenerOptions
     ): void {
         const listener = handler as EventListener;
-        element.addEventListener(event as string, listener, options);
+        element.addEventListener(event, listener, options);
 
         this.removers.push(() => {
-            element.removeEventListener(event as string, listener, options);
+            element.removeEventListener(event, listener, options);
         });
     }
 }
