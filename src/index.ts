@@ -23,7 +23,7 @@ const MAX_INSTANCES = 1;
  * ```
  */
 export function CITC(options?: CITCOptions): TelemetryEngine {
-    // Warn if creating multiple instances (common mistake in SPAs)
+    // Warn if creating multiple instances
     if (activeInstances >= MAX_INSTANCES) {
         console.warn(
             `[CITC] Warning: Creating instance #${activeInstances + 1}. ` +
