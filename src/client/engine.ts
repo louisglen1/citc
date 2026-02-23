@@ -9,17 +9,15 @@ import { Queue } from '../core/queue.js';
 import { Transport, HttpTransport, BeaconTransport, ConsoleTransport } from './transport.js';
 import { LifecycleManager } from './lifecycle.js';
 
-/**
- * Finalization registry to detect memory leaks from unclosed engines.
- */
-const engineCleanupRegistry = new FinalizationRegistry((engineId: number) => {
-    console.warn(
-        `[CITC] TelemetryEngine #${engineId} was garbage collected without calling stop(). ` +
-        `This may cause memory leaks. Always call await engine.stop() before discarding instances.`
-    );
-});
+// not a suitable solution as of yet, in concept may be required to ensure scalability but not the right approach
+// const engineCleanupRegistry = new FinalizationRegistry((engineId: number) => {
+//     console.warn(
+//         `[CITC] TelemetryEngine #${engineId} was garbage collected without calling stop(). ` +
+//         `This may cause memory leaks. Always call await engine.stop() before discarding instances.`
+//     );
+// });
 
-let engineIdCounter = 0;
+// let engineIdCounter = 0;
 
 /**
  * Main telemetry engine orchestrating discovery, collection, and transport.
@@ -34,16 +32,16 @@ export class TelemetryEngine {
     private transport: Transport;
     private lifecycle: LifecycleManager;
     private running: boolean = false;
-    private engineId: number;
-    private cleanupToken: object;
+    // private engineId: number;
+    // private cleanupToken: object;
 
     constructor(options: CITCOptions = {}) {
         this.options = options;
-        this.engineId = ++engineIdCounter;
-        this.cleanupToken = {};
+        // this.engineId = ++engineIdCounter;
+        // this.cleanupToken = {};
         
         // Register for cleanup detection
-        engineCleanupRegistry.register(this, this.engineId, this.cleanupToken);
+        // engineCleanupRegistry.register(this, this.engineId, this.cleanupToken);
 
         // Initialize transport
         this.transport = this.createTransport();
@@ -139,7 +137,7 @@ export class TelemetryEngine {
         this.running = false;
         
         // Unregister from cleanup detection - proper cleanup was done
-        engineCleanupRegistry.unregister(this.cleanupToken);
+        // engineCleanupRegistry.unregister(this.cleanupToken);
     }
 
     /**
