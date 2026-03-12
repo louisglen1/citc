@@ -1,6 +1,6 @@
 # CITC (Client Input Telemetry Collection)
 
-A minimal browser telemetry SDK for collecting user input events. Built for research — captures interaction patterns (timing, focus, keystrokes) without capturing raw input values.
+A minimal browser telemetry SDK for collecting user input events. Captures interaction patterns (timing, focus, keystrokes) without capturing raw input.
 
 ## Installation
 
