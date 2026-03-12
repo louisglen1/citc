@@ -11,18 +11,25 @@ import { ClipboardCollector } from './collectors/ClipboardCollector.js';
  */
 export class TargetManager {
     private collectors: BaseCollector[] = [];
+    private attached: Set<HTMLElement>;
     private emit: EventEmitter;
 
     constructor(emit: EventEmitter) {
         this.emit = emit;
+        this.attached = new Set<HTMLElement>();
     }
 
     /**
      * Attaches collectors to discovered fields.
      */
     attach(fields: DiscoveredField[]): void {
+        const startIndex = this.collectors.length;
+
         for (const field of fields) {
             const { id, element, capture } = field;
+
+            if (this.attached.has(field.element)) continue;
+            this.attached.add(field.element);
 
             if (capture.focus) {
                 this.collectors.push(new FocusCollector(element, id, this.emit));
@@ -46,8 +53,8 @@ export class TargetManager {
         }
 
         // Start all collectors
-        for (const collector of this.collectors) {
-            collector.start();
+        for (let i = startIndex; i < this.collectors.length; i++) {
+            this.collectors[i].start();
         }
     }
 
@@ -59,5 +66,6 @@ export class TargetManager {
             collector.stop();
         }
         this.collectors = [];
+        this.attached.clear();
     }
 }
