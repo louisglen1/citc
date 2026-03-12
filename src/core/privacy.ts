@@ -24,21 +24,21 @@ export class Privacy {
 
         // Redact keystroke text
         if (this.options.redactText && event.type === 'keystroke') {
-            if (filtered.data.key) {
+            if (filtered.data.key !== undefined) {
                 filtered.data.key = null;
             }
-            if (filtered.data.code) {
+            if (filtered.data.code !== undefined) {
                 filtered.data.code = null;
             }
         }
 
         // Redact clipboard content
-        if (this.options.redactClipboard && event.type === 'clipboard' && filtered.data.content) {
+        if (this.options.redactClipboard && event.type === 'clipboard' && filtered.data.content !== undefined) {
             filtered.data.content = null;
         }
 
         // Redact selection text
-        if (this.options.redactText && event.type === 'selection' && filtered.data.text) {
+        if (this.options.redactText && event.type === 'selection' && filtered.data.text !== undefined) {
             filtered.data.text = null;
         }
 
