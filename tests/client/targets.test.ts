@@ -231,10 +231,11 @@ describe('TargetManager', () => {
       }];
       
       manager.attach(fields);
-      
+
       input.setSelectionRange(0, 0);
-      input.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      
+      Object.defineProperty(document, 'activeElement', { value: input, writable: true, configurable: true });
+      document.dispatchEvent(new Event('selectionchange'));
+
       expect(events.length).toBeGreaterThan(0);
       expect(events[0].type).toBe('caret');
     });
