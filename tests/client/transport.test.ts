@@ -63,43 +63,28 @@ describe('HttpTransport', () => {
     expect(callBody.events).toHaveLength(3);
   });
   
-  it('should log error on failed response', async () => {
+  it('should throw on non-OK response', async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 500 });
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
+
     const transport = new HttpTransport('https://api.example.com/events');
-    await transport.send([createTestEvent()]);
-    
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('HTTP transport failed'),
-      500
-    );
-    
-    consoleSpy.mockRestore();
+
+    await expect(transport.send([createTestEvent()])).rejects.toThrow('HTTP transport failed: 500');
   });
-  
-  it('should handle fetch errors', async () => {
-    fetchMock.mockRejectedValue(new Error('Network error'));
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
+
+  it('should throw on non-OK response with 4xx status', async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 429 });
+
     const transport = new HttpTransport('https://api.example.com/events');
-    await transport.send([createTestEvent()]);
-    
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('HTTP transport error'),
-      expect.any(Error)
-    );
-    
-    consoleSpy.mockRestore();
+
+    await expect(transport.send([createTestEvent()])).rejects.toThrow('HTTP transport failed: 429');
   });
-  
-  it('should not throw on errors', async () => {
+
+  it('should propagate fetch network errors', async () => {
     fetchMock.mockRejectedValue(new Error('Network error'));
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-    
+
     const transport = new HttpTransport('https://api.example.com/events');
-    
-    await expect(transport.send([createTestEvent()])).resolves.toBeUndefined();
+
+    await expect(transport.send([createTestEvent()])).rejects.toThrow('Network error');
   });
 });
 
