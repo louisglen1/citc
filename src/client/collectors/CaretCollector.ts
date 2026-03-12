@@ -15,15 +15,15 @@ export class CaretCollector extends BaseCollector {
             
             const element = this.target as HTMLInputElement | HTMLTextAreaElement;
             if ('selectionStart' in element && 'selectionEnd' in element) {
+                const start = element.selectionStart;
+                const end = element.selectionEnd;
+                if (start === null || end === null) return;
                 this.emit({
                     type: 'caret',
                     fieldId: this.fieldId,
                     target: this.target,
                     timestamp: Date.now(),
-                    data: {
-                        start: element.selectionStart,
-                        end: element.selectionEnd,
-                    },
+                    data: { start, end },
                 });
             }
         });

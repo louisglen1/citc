@@ -8,8 +8,9 @@ export class SelectionCollector extends BaseCollector {
         this.on(this.target, 'select', () => {
             const element = this.target as HTMLInputElement | HTMLTextAreaElement;
             if ('selectionStart' in element && 'selectionEnd' in element) {
-                const start = element.selectionStart ?? 0;
-                const end = element.selectionEnd ?? 0;
+                const start = element.selectionStart;
+                const end = element.selectionEnd;
+                if (start === null || end === null) return;
                 const selectedText = element.value.substring(start, end);
 
                 this.emit({
