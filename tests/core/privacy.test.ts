@@ -192,6 +192,70 @@ describe('Privacy', () => {
       expect(filtered.data.key).toBeNull();
       expect(filtered.data.code).toBeNull();
     });
+    it('should redact deletion text while preserving range and count', () => {
+      const event = createTestEvent({
+        type: 'deletion',
+        data: {
+          key: 'Backspace',
+          start: 4,
+          end: 5,
+          count: 1,
+          text: 'a',
+          ctrlKey: false,
+          shiftKey: false,
+          altKey: false,
+          metaKey: false,
+        },
+      });
+
+      const privacy = new Privacy({ redactText: true });
+      const filtered = privacy.filter(event);
+
+      expect(filtered.data.text).toBeNull();
+      expect(filtered.data.start).toBe(4);
+      expect(filtered.data.end).toBe(5);
+      expect(filtered.data.count).toBe(1);
+      expect(filtered.data.key).toBe('Backspace');
+    });
+
+    it('should not redact deletion text when redactText is disabled', () => {
+      const event = createTestEvent({
+        type: 'deletion',
+        data: { key: 'Backspace', start: 2, end: 3, count: 1, text: 'x' },
+      });
+
+      const privacy = new Privacy({ redactText: false });
+      const filtered = privacy.filter(event);
+
+      expect(filtered.data.text).toBe('x');
+    });
+
+    it('should leave deletion.text as null when it was already null (word deletion)', () => {
+      const event = createTestEvent({
+        type: 'deletion',
+        data: { key: 'Backspace', start: null, end: null, count: null, text: null, ctrlKey: true },
+      });
+
+      const privacy = new Privacy({ redactText: true });
+      const filtered = privacy.filter(event);
+
+      expect(filtered.data.text).toBeNull();
+      expect(filtered.data.start).toBeNull();
+      expect(filtered.data.count).toBeNull();
+    });
+
+    it('should redact empty string deletion text', () => {
+      const event = createTestEvent({
+        type: 'deletion',
+        data: { key: 'Backspace', start: 0, end: 0, count: 0, text: '' },
+      });
+
+      const privacy = new Privacy({ redactText: true });
+      const filtered = privacy.filter(event);
+
+      expect(filtered.data.text).toBeNull();
+    });
+
     it('should redact empty string key values', () => {
       const event = createTestEvent({
         type: 'keystroke',

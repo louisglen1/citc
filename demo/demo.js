@@ -2,7 +2,7 @@ import { CITC } from '../dist/index.js';
 
 // ── State ────────────────────────────────────────────────────────────────────
 
-const counts = { focus: 0, blur: 0, keystroke: 0, caret: 0, selection: 0, clipboard: 0 };
+const counts = { focus: 0, blur: 0, keystroke: 0, deletion: 0, caret: 0, selection: 0, clipboard: 0 };
 let totalCount = 0;
 let instance = null;
 
@@ -34,6 +34,7 @@ const TYPE_COLOR = {
     focus:     '#3b82f6',
     blur:      '#94a3b8',
     keystroke: '#22c55e',
+    deletion:  '#ef4444',
     caret:     '#a855f7',
     selection: '#f97316',
     clipboard: '#0ea5e9',
@@ -71,6 +72,18 @@ function dataPreview(event) {
             .map(k => k.replace('Key', ''))
             .join('+');
         return mods ? `${mods}+${key}` : key;
+    }
+    if (t === 'deletion') {
+        const mods = ['ctrlKey', 'altKey', 'metaKey', 'shiftKey']
+            .filter(k => d[k])
+            .map(k => k.replace('Key', ''))
+            .join('+');
+        const key = mods ? `${mods}+${d.key}` : String(d.key);
+        if (d.count === null) return `${key} (word)`;
+        if (d.count === 0)    return `${key} (boundary)`;
+        const range = d.count === 1 ? `[${d.start}]` : `[${d.start}–${d.end}]`;
+        const preview = d.text !== null ? ` ${JSON.stringify(d.text)}` : ' •';
+        return `${key} ×${d.count} ${range}${preview}`;
     }
     if (t === 'focus' || t === 'blur') {
         return d.focused !== undefined ? (d.focused ? 'focused' : 'blurred') : '';

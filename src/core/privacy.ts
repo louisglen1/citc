@@ -42,6 +42,11 @@ export class Privacy {
             filtered.data.text = null;
         }
 
+        // Redact deleted text
+        if (this.options.redactText && event.type === 'deletion' && filtered.data.text !== undefined) {
+            filtered.data.text = null;
+        }
+
         return filtered;
     }
 }

@@ -2,7 +2,7 @@
  * Raw event emitted by collectors before processing.
  */
 export interface RawEvent {
-    type: 'focus' | 'blur' | 'keystroke' | 'caret' | 'selection' | 'clipboard';
+    type: 'focus' | 'blur' | 'keystroke' | 'deletion' | 'caret' | 'selection' | 'clipboard';
     fieldId: string;
     target: HTMLElement;
     timestamp?: number;
