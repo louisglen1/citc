@@ -18,9 +18,6 @@ export class LifecycleManager {
         this.flushCallback = flushCallback;
     }
 
-    /**
-     * Sets up all lifecycle hooks.
-     */
     setup(): void {
         const enabled = this.options.enabled ?? true;
 
@@ -34,17 +31,12 @@ export class LifecycleManager {
         this.setupFormSubmit();
     }
 
-    /**
-     * Tears down all lifecycle hooks.
-     */
     teardown(): void {
-        // Clear interval timer
         if (this.timer !== undefined) {
             clearInterval(this.timer);
             this.timer = undefined;
         }
 
-        // Remove event listeners
         if (this.boundHandlers.visibilityChange) {
             document.removeEventListener('visibilitychange', this.boundHandlers.visibilityChange);
         }
@@ -83,14 +75,9 @@ export class LifecycleManager {
         const enabled = this.options.flushOnBeforeUnload ?? true;
         if (enabled) {
             this.boundHandlers.beforeUnload = () => {
-                // For beforeunload, we need synchronous completion
-                // The flush callback should use BeaconTransport which completes synchronously
+                // beforeunload can't await promises; BeaconTransport completes synchronously
                 const result = this.flushCallback();
-                
-                // If it returns a promise, we can't await it in beforeunload
-                // but BeaconTransport completes synchronously anyway
                 if (result instanceof Promise) {
-                    // Best effort - BeaconTransport will complete before page unloads
                     result.catch(err => console.error('[CITC] Flush error:', err));
                 }
             };

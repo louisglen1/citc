@@ -1,17 +1,11 @@
 import { FieldSelection, CaptureConfig } from '../schemas/config.js';
 
-/**
- * Discovered field target.
- */
 export interface DiscoveredField {
     id: string;
     element: HTMLElement;
     capture: CaptureConfig;
 }
 
-/**
- * Resolves field selection configuration into concrete DOM elements.
- */
 export class FieldDiscovery {
     private defaults: CaptureConfig;
 
@@ -25,9 +19,6 @@ export class FieldDiscovery {
         };
     }
 
-    /**
-     * Discovers fields based on selection configuration.
-     */
     discover(selection?: FieldSelection): DiscoveredField[] {
         if (!selection) {
             return [];
@@ -43,7 +34,6 @@ export class FieldDiscovery {
     private discoverByAttribute(config: { mode: 'attribute'; attribute: string; capture?: CaptureConfig }): DiscoveredField[] {
         const fields: DiscoveredField[] = [];
         
-        // The DOM will validate formatting when querying but we need to check if the attribute is provided first
         const attr = config.attribute;
         if (!attr) {
             throw new Error("[CITC] Received an empty attribute string. Check your AttributeFieldSelection configuration");

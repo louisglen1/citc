@@ -1,29 +1,11 @@
 import { TelemetryEngine } from './client/engine.js';
 import { CITCOptions } from './schemas/config.js';
 
-/**
- * Track active instances to prevent accidental duplicate initialization.
- */
+// Warn if creating multiple concurrent instances
 let activeInstances = 0;
 const MAX_INSTANCES = 1;
 
-/**
- * Main entry point: creates and returns a TelemetryEngine instance.
- * 
- * @param options - Configuration options for the telemetry engine
- * @returns A TelemetryEngine instance with start() and stop() methods
- * 
- * @example
- * ```typescript
- * const citc = CITC({
- *   endpoint: 'https://api.example.com/telemetry',
- *   fields: { mode: 'attribute', attribute: 'data-track' }
- * });
- * citc.start();
- * ```
- */
 export function CITC(options?: CITCOptions): TelemetryEngine {
-    // Warn if creating multiple instances
     if (activeInstances >= MAX_INSTANCES) {
         console.warn(
             `[CITC] Warning: Creating instance #${activeInstances + 1}. ` +
@@ -35,7 +17,6 @@ export function CITC(options?: CITCOptions): TelemetryEngine {
     const engine = new TelemetryEngine(options);
     activeInstances++;
     
-    // Wrap stop() to decrement counter
     const originalStop = engine.stop.bind(engine);
     engine.stop = async function() {
         await originalStop();
@@ -62,7 +43,6 @@ export type {
     LifecycleOptions
 } from './schemas';
 
-// Re-export engine type
 export { TelemetryEngine } from './client/engine.js';
 
 // Re-export transport types for custom implementations

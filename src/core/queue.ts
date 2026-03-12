@@ -17,22 +17,20 @@ export class Queue {
 
     constructor(transport: Transport, options: QueueOptions = {}) {
         this.transport = transport;
-        
-        // Validate and set batchSize (must be positive integer)
+
+        // 0 is allowed for flushInterval (disables timer), but not negative
         const batchSize = options.batchSize ?? 10;
         if (batchSize < 1 || !Number.isFinite(batchSize)) {
             throw new Error(`[CITC] queue.batchSize must be >= 1 and finite, got: ${batchSize}`);
         }
         this.batchSize = Math.floor(batchSize);
-        
-        // Validate and set flushInterval (0 is allowed to disable, but not negative)
+
         const flushInterval = options.flushInterval ?? 5000;
         if (flushInterval < 0 || !Number.isFinite(flushInterval)) {
             throw new Error(`[CITC] queue.flushInterval must be >= 0 and finite, got: ${flushInterval}`);
         }
         this.flushInterval = Math.floor(flushInterval);
-        
-        // Validate and set maxQueueSize (must be positive integer)
+
         const maxQueueSize = options.maxQueueSize ?? 1000;
         if (maxQueueSize < 1 || !Number.isFinite(maxQueueSize)) {
             throw new Error(`[CITC] queue.maxQueueSize must be >= 1 and finite, got: ${maxQueueSize}`);
@@ -40,16 +38,12 @@ export class Queue {
         this.maxQueueSize = Math.floor(maxQueueSize);
     }
 
-    /**
-     * Enqueues an event and schedules flush.
-     * If queue is at max capacity, drops oldest events (FIFO eviction).
-     */
+    /** Drops oldest event if at capacity (FIFO eviction). */
     enqueue(event: TelemetryEvent): void {
-        // Enforce queue size limit with drop-oldest policy
         if (this.buffer.length >= this.maxQueueSize) {
-            this.buffer.shift(); // Drop oldest event
+            this.buffer.shift();
             this.droppedEvents++;
-            
+
             if (this.droppedEvents % 100 === 0) {
                 console.warn(`[CITC] Queue overflow: ${this.droppedEvents} events dropped`);
             }
@@ -64,19 +58,11 @@ export class Queue {
         }
     }
 
-    /**
-     * Returns the number of events dropped due to queue overflow.
-     */
     getDroppedCount(): number {
         return this.droppedEvents;
     }
 
-    /**
-     * Flushes all buffered events.
-     * Uses a mutex to prevent concurrent flush operations.
-     */
     async flush(): Promise<void> {
-        // Prevent concurrent flushes
         if (this.flushing) {
             return;
         }
@@ -92,20 +78,18 @@ export class Queue {
 
         this.flushing = true;
         const events = this.buffer.splice(0);
-        
+
         try {
             await this.transport.send(events);
         } catch (error) {
-            // Transport failed - restore events to front of buffer
-            // to retry on next flush (respecting maxQueueSize)
+            // Restore events to the front of the buffer for retry on next flush
             console.error('[CITC] Transport failed, restoring events to queue:', error);
-            
-            // Restore events to front of buffer, but respect maxQueueSize
+
             const availableSpace = this.maxQueueSize - this.buffer.length;
             if (availableSpace > 0) {
                 const eventsToRestore = events.slice(0, availableSpace);
                 this.buffer.unshift(...eventsToRestore);
-                
+
                 const dropped = events.length - eventsToRestore.length;
                 if (dropped > 0) {
                     this.droppedEvents += dropped;
@@ -115,7 +99,6 @@ export class Queue {
                     );
                 }
             } else {
-                // No space - drop all events
                 this.droppedEvents += events.length;
                 console.warn(
                     `[CITC] Queue full after transport failure: ` +
@@ -123,7 +106,6 @@ export class Queue {
                 );
             }
         } finally {
-            // Always release lock, even if transport fails
             this.flushing = false;
         }
     }

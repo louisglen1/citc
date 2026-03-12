@@ -2,40 +2,12 @@ import { TelemetryEvent } from '../schemas/events.js';
 
 /**
  * Transport interface for sending telemetry events.
- * 
- * Implementations are responsible for delivering batched events to a backend service.
- * The SDK includes built-in HTTP, Beacon, and Console transports, but custom
- * implementations can be provided via the `transport` config option.
- * 
- * @example
- * ```typescript
- * class CustomTransport implements Transport {
- *   async send(events: TelemetryEvent[]): Promise<void> {
- *     // Custom delivery logic (e.g., WebSocket, IndexedDB, etc.)
- *     await myCustomSender(events);
- *   }
- * }
- * 
- * CITC({ transport: new CustomTransport() }).start();
- * ```
+ * Implement this to deliver events via WebSocket, IndexedDB, or any custom mechanism.
  */
 export interface Transport {
-    /**
-     * Sends a batch of telemetry events.
-     * 
-     * @param events - Array of processed telemetry events to send
-     * @returns Promise that resolves when events are sent (or fails silently)
-     * 
-     * @remarks
-     * - Called automatically by the queue when batch size or flush interval is reached
-     * - For `beforeunload` reliability, use BeaconTransport (synchronous sendBeacon API)
-     */
     send(events: TelemetryEvent[]): Promise<void>;
 }
 
-/**
- * HTTP transport using fetch API.
- */
 export class HttpTransport implements Transport {
     private endpoint: string;
 
@@ -56,9 +28,8 @@ export class HttpTransport implements Transport {
     }
 }
 
-// BeaconTransport is fire-and-forget, dropped events will not be re-queued.
-// The nature of this transport method (especially when used on page unload)
-// means splicing failed beacon events into the queue would be unreliable
+// Fire-and-forget. Failed beacon events are not re-queued — restoring events
+// after a failed sendBeacon (especially on unload) would be unreliable.
 export class BeaconTransport implements Transport {
     private endpoint: string;
 
@@ -71,7 +42,6 @@ export class BeaconTransport implements Transport {
             const blob = new Blob([JSON.stringify({ events })], {
                 type: 'application/json',
             });
-            // sendBeacon is synchronous and returns immediately
             const success = navigator.sendBeacon(this.endpoint, blob);
 
             if (!success) {
@@ -80,13 +50,10 @@ export class BeaconTransport implements Transport {
         } catch (error) {
             console.error('[CITC] Beacon transport error:', error);
         }
-        // Return immediately - sendBeacon completes synchronously
     }
 }
 
-/**
- * Console transport for debugging (default when no endpoint provided).
- */
+/** Default transport when no endpoint is configured. */
 export class ConsoleTransport implements Transport {
     async send(events: TelemetryEvent[]): Promise<void> {
         console.log('[CITC] Events:', events);

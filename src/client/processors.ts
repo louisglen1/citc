@@ -1,9 +1,6 @@
 import { RawEvent, TelemetryEvent } from '../schemas/events.js';
 import { Context } from '../schemas/context.js';
 
-/**
- * Processes raw events into telemetry events with context enrichment.
- */
 export class EventProcessor {
     private context: Context;
 
@@ -14,12 +11,8 @@ export class EventProcessor {
         };
     }
 
-    /**
-     * Updates the current context.
-     * Validates that the context is JSON-serializable to prevent crashes during transport.
-     */
+    /** Validates that ctx is JSON-serializable before merging (prevents transport crashes). */
     setContext(ctx: Partial<Context>): void {
-        // Validate context is serializable
         try {
             JSON.stringify(ctx);
         } catch (error) {
@@ -28,15 +21,12 @@ export class EventProcessor {
                 'Circular references and non-serializable values are not allowed.',
                 error
             );
-            return; // Don't update context with invalid data
+            return;
         }
-        
+
         this.context = { ...this.context, ...ctx };
     }
 
-    /**
-     * Processes a raw event into a telemetry event.
-     */
     process(raw: RawEvent): TelemetryEvent {
         return {
             type: raw.type,
