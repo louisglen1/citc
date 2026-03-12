@@ -27,7 +27,6 @@ export interface Transport {
      * @returns Promise that resolves when events are sent (or fails silently)
      * 
      * @remarks
-     * - Should handle errors gracefully without throwing
      * - Called automatically by the queue when batch size or flush interval is reached
      * - For `beforeunload` reliability, use BeaconTransport (synchronous sendBeacon API)
      */
@@ -45,18 +44,14 @@ export class HttpTransport implements Transport {
     }
 
     async send(events: TelemetryEvent[]): Promise<void> {
-        try {
-            const response = await fetch(this.endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ events }),
-            });
+        const response = await fetch(this.endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ events }),
+        });
 
-            if (!response.ok) {
-                console.error('[CITC] HTTP transport failed:', response.status);
-            }
-        } catch (error) {
-            console.error('[CITC] HTTP transport error:', error);
+        if (!response.ok) {
+            throw new Error("[CITC] HTTP transport failed: " + response.status);
         }
     }
 }
