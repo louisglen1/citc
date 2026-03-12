@@ -299,6 +299,31 @@ describe('FieldDiscovery', () => {
     });
   });
   
+  describe('buildField', () => {
+    it('should build a DiscoveredField using default capture config', () => {
+      const discovery = new FieldDiscovery({ caret: true });
+      const input = document.createElement('input');
+
+      const field = discovery.buildField(input, 'email');
+
+      expect(field.id).toBe('email');
+      expect(field.element).toBe(input);
+      expect(field.capture.focus).toBe(true);
+      expect(field.capture.keystroke).toBe(true);
+      expect(field.capture.caret).toBe(true);
+    });
+
+    it('should apply capture override passed to buildField', () => {
+      const discovery = new FieldDiscovery({ keystroke: true });
+      const input = document.createElement('input');
+
+      const field = discovery.buildField(input, 'email', { keystroke: false });
+
+      expect(field.capture.keystroke).toBe(false);
+      expect(field.capture.focus).toBe(true); // default preserved
+    });
+  });
+
   describe('capture configuration merging', () => {
     it('should use defaults when no override provided', () => {
       const discovery = new FieldDiscovery({

@@ -96,6 +96,10 @@ export class FieldDiscovery {
         return discovered;
     }
 
+    buildField(element: HTMLElement, id: string, capture?: CaptureConfig): DiscoveredField {
+        return { id, element, capture: this.mergeCapture(capture) };
+    }
+
     private mergeCapture(override?: CaptureConfig): CaptureConfig {
         return {
             focus: override?.focus ?? this.defaults.focus,

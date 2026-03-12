@@ -412,6 +412,164 @@ describe('TelemetryEngine', () => {
     });
   });
   
+  describe('observeMutations', () => {
+    it('should attach collectors to elements added after start()', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      const engine = new TelemetryEngine({
+        fields: { mode: 'attribute', attribute: 'data-citc' },
+        dom: { observeMutations: true },
+        lifecycle: { enabled: false },
+      });
+
+      engine.start();
+
+      const input = document.createElement('input');
+      input.setAttribute('data-citc', 'email');
+      document.body.appendChild(input);
+
+      // Wait for MutationObserver microtask to fire
+      await Promise.resolve();
+
+      input.dispatchEvent(new FocusEvent('focus'));
+      await engine.flush();
+
+      const logCall = consoleSpy.mock.calls.find(call =>
+        call[0] && call[0].includes('[CITC] Events:')
+      );
+      expect(logCall).toBeDefined();
+      expect(logCall?.[1][0].fieldId).toBe('email');
+
+      await engine.stop();
+      consoleSpy.mockRestore();
+    });
+
+    it('should discover nested elements within an added container node', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      const engine = new TelemetryEngine({
+        fields: { mode: 'attribute', attribute: 'data-citc' },
+        dom: { observeMutations: true },
+        lifecycle: { enabled: false },
+      });
+
+      engine.start();
+
+      const container = document.createElement('div');
+      const nested = document.createElement('input');
+      nested.setAttribute('data-citc', 'nested-field');
+      container.appendChild(nested);
+      document.body.appendChild(container);
+
+      await Promise.resolve();
+
+      nested.dispatchEvent(new FocusEvent('focus'));
+      await engine.flush();
+
+      const logCall = consoleSpy.mock.calls.find(call =>
+        call[0] && call[0].includes('[CITC] Events:')
+      );
+      expect(logCall).toBeDefined();
+      expect(logCall?.[1][0].fieldId).toBe('nested-field');
+
+      await engine.stop();
+      consoleSpy.mockRestore();
+    });
+
+    it('should not attach collectors to dynamic elements when observeMutations is not set', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      const engine = new TelemetryEngine({
+        fields: { mode: 'attribute', attribute: 'data-citc' },
+        lifecycle: { enabled: false },
+      });
+
+      engine.start();
+
+      const input = document.createElement('input');
+      input.setAttribute('data-citc', 'email');
+      document.body.appendChild(input);
+
+      await Promise.resolve();
+
+      input.dispatchEvent(new FocusEvent('focus'));
+      await engine.flush();
+
+      const logCall = consoleSpy.mock.calls.find(call =>
+        call[0] && call[0].includes('[CITC] Events:')
+      );
+      expect(logCall).toBeUndefined();
+
+      await engine.stop();
+      consoleSpy.mockRestore();
+    });
+
+    it('should stop observing after stop()', async () => {
+      const input = createTestInput({ id: 'existing' });
+      input.setAttribute('data-citc', 'existing');
+      document.body.appendChild(input);
+
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      const engine = new TelemetryEngine({
+        fields: { mode: 'attribute', attribute: 'data-citc' },
+        dom: { observeMutations: true },
+        lifecycle: { enabled: false },
+      });
+
+      engine.start();
+      await engine.stop();
+
+      consoleSpy.mockClear();
+
+      const newInput = document.createElement('input');
+      newInput.setAttribute('data-citc', 'new-field');
+      document.body.appendChild(newInput);
+
+      await Promise.resolve();
+
+      newInput.dispatchEvent(new FocusEvent('focus'));
+
+      const logCall = consoleSpy.mock.calls.find(call =>
+        call[0] && call[0].includes('[CITC] Events:')
+      );
+      expect(logCall).toBeUndefined();
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should be a no-op observer in explicit field mode', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      const engine = new TelemetryEngine({
+        fields: [{ id: 'email', selector: '#email-input' }],
+        dom: { observeMutations: true },
+        lifecycle: { enabled: false },
+      });
+
+      engine.start();
+
+      // Add an element that would match the explicit selector
+      const input = document.createElement('input');
+      input.id = 'email-input';
+      document.body.appendChild(input);
+
+      await Promise.resolve();
+
+      input.dispatchEvent(new FocusEvent('focus'));
+      await engine.flush();
+
+      // Explicit mode observer is a no-op — element not discovered
+      const logCall = consoleSpy.mock.calls.find(call =>
+        call[0] && call[0].includes('[CITC] Events:')
+      );
+      expect(logCall).toBeUndefined();
+
+      await engine.stop();
+      consoleSpy.mockRestore();
+    });
+  });
+
   describe('edge cases', () => {
     it('should handle stop() called during active flush', async () => {
       const input = createTestInput({ id: 'test' });

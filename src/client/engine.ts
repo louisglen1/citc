@@ -22,6 +22,7 @@ export class TelemetryEngine {
     private transport: Transport;
     private lifecycle: LifecycleManager;
     private running: boolean = false;
+    private observer?: MutationObserver;
 
     constructor(options: CITCOptions = {}) {
         this.options = options;
@@ -82,6 +83,12 @@ export class TelemetryEngine {
         }
 
         this.targets.attach(fields);
+
+        if (this.options.dom?.observeMutations) {
+            this.observer = this.createMutationObserver();
+            this.observer?.observe(document.body, { childList: true, subtree: true});
+        }
+
         this.lifecycle.setup();
         this.running = true;
     }
@@ -117,10 +124,9 @@ export class TelemetryEngine {
         this.lifecycle.teardown();
         this.targets.detach();
         await this.queue.flush();
+        this.observer?.disconnect();
+        this.observer = undefined;
         this.running = false;
-        
-        // Unregister from cleanup detection - proper cleanup was done
-        // engineCleanupRegistry.unregister(this.cleanupToken);
     }
 
     /**
@@ -211,5 +217,33 @@ export class TelemetryEngine {
 
         // Default to console for debugging
         return new ConsoleTransport();
+    }
+
+    private createMutationObserver(): MutationObserver {
+        const fieldConfig = this.options.fields;
+        if (!fieldConfig || Array.isArray(fieldConfig) || fieldConfig.mode !== 'attribute') {
+            return new MutationObserver(() => {});
+        }
+
+        const attr = fieldConfig.attribute;
+        return new MutationObserver((mutations) => {
+            const newElements: HTMLElement[] = [];
+            for (const mutation of mutations) {
+                for (const node of Array.from(mutation.addedNodes)) {
+                    if (!(node instanceof HTMLElement)) continue;
+                    if (node.hasAttribute(attr)) newElements.push(node);
+                    node.querySelectorAll<HTMLElement>(`[${attr}]`).forEach(el => newElements.push(el));
+                }
+            }
+
+            if (newElements.length === 0) return;
+            const newFields = newElements
+                .map(el => ({ id: el.getAttribute(attr)!, element: el }))
+                .filter(f => f.id);
+
+            // Build DiscoveredField with merged capture config
+            const discovered = newFields.map(f => this.discovery.buildField(f.element, f.id, fieldConfig.capture));
+            this.targets.attach(discovered);
+        })
     }
 }
