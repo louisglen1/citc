@@ -192,5 +192,15 @@ describe('Privacy', () => {
       expect(filtered.data.key).toBeNull();
       expect(filtered.data.code).toBeNull();
     });
+    it('should redact empty string key values', () => {
+      const event = createTestEvent({
+        type: 'keystroke',
+        data: { key: '', code: '' },
+      });
+      const privacy = new Privacy({ redactText: true });
+      const filtered = privacy.filter(event);
+      expect(filtered.data.key).toBeNull();
+      expect(filtered.data.code).toBeNull();
+    });
   });
 });
