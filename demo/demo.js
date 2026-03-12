@@ -1,4 +1,4 @@
-import { CITC } from '../dist/index.js';
+import { CITC } from 'https://esm.sh/@louisglen1/citc';
 
 // ── State ────────────────────────────────────────────────────────────────────
 
