@@ -108,29 +108,21 @@ describe('FieldDiscovery', () => {
       expect(fields[0].id).toBe('valid');
     });
     
-    it('should validate attribute name format', () => {
+    it('should throw on empty attribute string', () => {
+      const discovery = new FieldDiscovery();
+
+      expect(() => discovery.discover({ mode: 'attribute', attribute: '' }))
+        .toThrow('Received an empty attribute string');
+    });
+
+    it('should throw and log on invalid attribute name', () => {
       const discovery = new FieldDiscovery();
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
-      // Invalid: starts with number
-      let fields = discovery.discover({ mode: 'attribute', attribute: '123-invalid' });
-      expect(fields).toHaveLength(0);
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid attribute name'));
-      
-      consoleSpy.mockClear();
-      
-      // Invalid: contains spaces
-      fields = discovery.discover({ mode: 'attribute', attribute: 'data invalid' });
-      expect(fields).toHaveLength(0);
-      expect(consoleSpy).toHaveBeenCalled();
-      
-      consoleSpy.mockClear();
-      
-      // Invalid: empty
-      fields = discovery.discover({ mode: 'attribute', attribute: '' });
-      expect(fields).toHaveLength(0);
-      expect(consoleSpy).toHaveBeenCalled();
-      
+
+      expect(() => discovery.discover({ mode: 'attribute', attribute: '123-invalid' }))
+        .toThrow();
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid attribute'));
+
       consoleSpy.mockRestore();
     });
     
@@ -157,24 +149,19 @@ describe('FieldDiscovery', () => {
       });
     });
     
-    it('should handle querySelectorAll errors gracefully', () => {
+    it('should log and rethrow querySelectorAll errors', () => {
       const discovery = new FieldDiscovery();
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
-      // Mock querySelectorAll to throw
+
       const originalQuerySelectorAll = document.querySelectorAll;
       document.querySelectorAll = vi.fn(() => {
         throw new Error('Selector error');
       });
-      
-      const fields = discovery.discover({ mode: 'attribute', attribute: 'data-citc' });
-      
-      expect(fields).toHaveLength(0);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid selector'),
-        expect.any(Error)
-      );
-      
+
+      expect(() => discovery.discover({ mode: 'attribute', attribute: 'data-citc' }))
+        .toThrow('Selector error');
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid attribute'));
+
       document.querySelectorAll = originalQuerySelectorAll;
       consoleSpy.mockRestore();
     });
@@ -232,25 +219,24 @@ describe('FieldDiscovery', () => {
       expect(fields[0].element).toBe(input);
     });
     
-    it('should skip fields with invalid selectors', () => {
+    it('should throw and log on invalid selector', () => {
       const discovery = new FieldDiscovery();
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
-      const input = document.createElement('input');
-      input.id = 'valid';
-      document.body.appendChild(input);
-      
-      const fields = discovery.discover([
+
+      expect(() => discovery.discover([
         { id: 'field1', selector: '[invalid][[[' },
-        { id: 'field2', selector: '#valid' },
-      ]);
-      
-      expect(fields).toHaveLength(1);
-      expect(fields[0].id).toBe('field2');
-      expect(consoleSpy).toHaveBeenCalled();
-      expect(consoleSpy.mock.calls[0][0]).toContain('Invalid selector');
-      
+      ])).toThrow();
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid selector'));
+
       consoleSpy.mockRestore();
+    });
+
+    it('should throw on empty field selector', () => {
+      const discovery = new FieldDiscovery();
+
+      expect(() => discovery.discover([
+        { id: 'field1', selector: '' },
+      ])).toThrow('Received an empty field selector');
     });
     
     it('should skip fields where element is not found', () => {

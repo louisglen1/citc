@@ -43,15 +43,10 @@ export class FieldDiscovery {
     private discoverByAttribute(config: { mode: 'attribute'; attribute: string; capture?: CaptureConfig }): DiscoveredField[] {
         const fields: DiscoveredField[] = [];
         
-        // Validate attribute name (must be valid CSS identifier)
+        // The DOM will validate formatting when querying but we need to check if the attribute is provided first
         const attr = config.attribute;
-        if (!attr || typeof attr !== 'string' || !/^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(attr)) {
-            console.error(
-                `[CITC] Invalid attribute name: "${attr}". ` +
-                `Attribute must start with a letter or underscore, ` +
-                `followed by letters, digits, hyphens, or underscores.`
-            );
-            return fields;
+        if (!attr) {
+            throw new Error("[CITC] Received an empty attribute string. Check your AttributeFieldSelection configuration");
         }
         
         try {
@@ -67,12 +62,10 @@ export class FieldDiscovery {
                 }
             });
         } catch (error) {
-            console.error(
-                `[CITC] Invalid selector for attribute "${attr}":`,
-                error
-            );
+            console.error(`[CITC] Invalid attribute: ${attr}`);
+            throw error;
         }
-
+    
         return fields;
     }
 
@@ -80,6 +73,10 @@ export class FieldDiscovery {
         const discovered: DiscoveredField[] = [];
 
         for (const field of fields) {
+            if (!field.selector) {
+                throw new Error("[CITC] Received an empty field selector. Check your ExplicitField configuration");
+            }
+
             try {
                 const element = document.querySelector<HTMLElement>(field.selector);
                 if (element) {
@@ -90,11 +87,10 @@ export class FieldDiscovery {
                     });
                 }
             } catch (error) {
-                console.error(
-                    `[CITC] Invalid selector "${field.selector}" for field "${field.id}":`,
-                    error
-                );
+                console.error(`[CITC] Invalid selector: ${field.selector}`);
+                throw error;
             }
+            
         }
 
         return discovered;
