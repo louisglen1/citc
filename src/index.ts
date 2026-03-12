@@ -58,6 +58,8 @@ export type {
     DOMOptions,
     DefaultsOptions,
     CITCOptions,
+    QueueOptions,
+    LifecycleOptions
 } from './schemas';
 
 // Re-export engine type
