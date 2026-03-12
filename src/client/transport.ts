@@ -56,10 +56,9 @@ export class HttpTransport implements Transport {
     }
 }
 
-/**
- * Beacon transport using sendBeacon API.
- * Uses synchronous sendBeacon which is reliable during page unload.
- */
+// BeaconTransport is fire-and-forget, dropped events will not be re-queued.
+// The nature of this transport method (especially when used on page unload)
+// means splicing failed beacon events into the queue would be unreliable
 export class BeaconTransport implements Transport {
     private endpoint: string;
 
