@@ -23,8 +23,10 @@ import { Transport } from '../client/transport.js';
 export interface CaptureConfig {
     /** Track focus/blur events on input fields */
     focus?: boolean;
-    /** Track keystroke events (metadata only, no raw text) */
+    /** Track keystroke events (metadata only, no raw text). Backspace/Delete are excluded; use deletion instead. */
     keystroke?: boolean;
+    /** Track deletion events (Backspace and Delete keys) as a distinct event type */
+    deletion?: boolean;
     /** Track caret position changes (cursor movement) */
     caret?: boolean;
     /** Track text selection events */

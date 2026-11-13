@@ -21,6 +21,7 @@ export class FieldDiscovery {
         this.defaults = {
             focus: defaults.focus ?? true,
             keystroke: defaults.keystroke ?? true,
+            deletion: defaults.deletion ?? false,
             caret: defaults.caret ?? false,
             selection: defaults.selection ?? false,
             clipboard: defaults.clipboard ?? false,
@@ -106,6 +107,7 @@ export class FieldDiscovery {
         return {
             focus: override?.focus ?? this.defaults.focus,
             keystroke: override?.keystroke ?? this.defaults.keystroke,
+            deletion: override?.deletion ?? this.defaults.deletion,
             caret: override?.caret ?? this.defaults.caret,
             selection: override?.selection ?? this.defaults.selection,
             clipboard: override?.clipboard ?? this.defaults.clipboard,

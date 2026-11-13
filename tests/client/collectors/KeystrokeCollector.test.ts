@@ -78,23 +78,36 @@ describe('KeystrokeCollector', () => {
       expect(events[0].data?.metaKey).toBe(false);
     });
     
-    it('should handle special keys', () => {
+    it('should handle special keys (excluding deletion keys)', () => {
       const collector = new KeystrokeCollector(input, 'email', (event) => {
         events.push(event);
       });
-      
+
       collector.start();
-      
-      const specialKeys = ['Enter', 'Tab', 'Escape', 'Backspace', 'Delete', 'ArrowUp'];
-      
+
+      const specialKeys = ['Enter', 'Tab', 'Escape', 'ArrowUp'];
+
       specialKeys.forEach(key => {
         input.dispatchEvent(new KeyboardEvent('keydown', { key }));
       });
-      
+
       expect(events).toHaveLength(specialKeys.length);
       specialKeys.forEach((key, index) => {
         expect(events[index].data?.key).toBe(key);
       });
+    });
+
+    it('should not emit events for Backspace or Delete (handled by DeletionCollector)', () => {
+      const collector = new KeystrokeCollector(input, 'email', (event) => {
+        events.push(event);
+      });
+
+      collector.start();
+
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace' }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }));
+
+      expect(events).toHaveLength(0);
     });
     
     it('should include fieldId in event', () => {

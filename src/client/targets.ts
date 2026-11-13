@@ -4,6 +4,7 @@ import { DiscoveredField } from './discover.js';
 import { BaseCollector, EventEmitter } from './collectors/BaseCollector.js';
 import { FocusCollector } from './collectors/FocusCollector.js';
 import { KeystrokeCollector } from './collectors/KeystrokeCollector.js';
+import { DeletionCollector } from './collectors/DeletionCollector.js';
 import { CaretCollector } from './collectors/CaretCollector.js';
 import { SelectionCollector } from './collectors/SelectionCollector.js';
 import { ClipboardCollector } from './collectors/ClipboardCollector.js';
@@ -32,6 +33,10 @@ export class TargetManager {
 
             if (capture.keystroke) {
                 this.collectors.push(new KeystrokeCollector(element, id, this.emit));
+            }
+
+            if (capture.deletion) {
+                this.collectors.push(new DeletionCollector(element, id, this.emit));
             }
 
             if (capture.caret) {
